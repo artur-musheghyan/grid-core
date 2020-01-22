@@ -1,6 +1,6 @@
 {
   "name": "@koreez/grid-core",
-  "version": "1.0.0",
+  "version": "1.0.0-alpha01",
   "description": "core functionality for grid system",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -9,11 +9,8 @@
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -p tsconfig.json",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run lint",
-    "preversion": "npm run lint",
-    "version": "npm run format && git add -A src",
-    "postversion": "git push && git push --tags"
+    "prepare": "npm run build --scripts-prepend-node-path",
+    "prepublishOnly": "npm test && npm run lint"
   },
   "repository": {
     "type": "git",
