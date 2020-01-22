@@ -6,7 +6,7 @@ import { convertToRect, fillRect } from './utils/Utils';
 export class Cell<T extends ICellConfig | IGridConfig> {
   private _config: T;
   private readonly _name: string;
-  private readonly _cells: Array<Cell<ICellConfig>>;
+  private readonly _cells: Cell<ICellConfig>[];
   private readonly _bounds: Rect;
   private readonly _scale: CellScale;
   private readonly _align: CellAlign;
@@ -53,7 +53,7 @@ export class Cell<T extends ICellConfig | IGridConfig> {
    * @description Array of child cells
    * @returns {Cell[]} child cells
    */
-  get cells(): Array<Cell<ICellConfig>> {
+  get cells(): Cell<ICellConfig>[] {
     return this._cells;
   }
 
@@ -101,7 +101,7 @@ export class Cell<T extends ICellConfig | IGridConfig> {
    * @description Returns cells way down of the tree, recursively
    * @returns {Cell[]} Array of cells
    */
-  public getCells(): Array<Cell<ICellConfig>> {
+  public getCells(): Cell<ICellConfig>[] {
     const cells = [];
     cells.push(this);
     this._cells.forEach(cell => cells.push(...cell.getCells()));
@@ -138,7 +138,7 @@ export class Cell<T extends ICellConfig | IGridConfig> {
     };
   }
 
-  private _buildCells(rawCells: ICellConfig[]): Array<Cell<ICellConfig>> {
+  private _buildCells(rawCells: ICellConfig[]): Cell<ICellConfig>[] {
     const cells = [];
 
     const { width: bw, height: bh, left: bl, right: br, top: bt, bottom: bb } = this.contentArea;
