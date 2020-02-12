@@ -11,7 +11,7 @@ export interface ICellConfig {
 
 export type IGridConfig = ICellConfig & {
   debug?: { color?: number };
-  bounds: () => { x: number; y: number; width: number; height: number };
+  bounds?: () => { x: number; y: number; width: number; height: number };
 };
 
 export interface IContent {

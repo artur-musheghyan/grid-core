@@ -23,7 +23,7 @@ export class Cell<T extends ICellConfig | IGridConfig> {
     this._name = name;
     this._scale = scale || CellScale.Fit;
     this._align = align || CellAlign.Center;
-    this._bounds = fillRect(typeof bounds === 'function' ? bounds() : bounds);
+    this._bounds = fillRect(bounds ? (typeof bounds === 'function' ? bounds() : bounds) : {});
     this._padding = convertToRect(padding || 0, this._bounds);
     this._cells = this._buildCells(cells || []);
     this._contents = [];
