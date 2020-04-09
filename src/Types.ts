@@ -7,6 +7,7 @@ export interface ICellConfig {
   cells?: ICellConfig[];
   bounds: { x?: number; y?: number; width?: number; height?: number };
   padding?: number | { x?: number; y?: number; width: number; height: number };
+  offset?: { x?: number; y?: number };
 }
 
 export type IGridConfig = ICellConfig & {

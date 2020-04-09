@@ -11,13 +11,14 @@ export class Cell<T extends ICellConfig | IGridConfig> {
   private readonly _scale: CellScale;
   private readonly _align: CellAlign;
   private readonly _padding: Rect;
+  private readonly _offset: Point;
   private readonly _contents: IContent[];
 
   /**
    * @param config Input configuration object.
    */
   constructor(config: T) {
-    const { name, bounds, cells, scale, align, padding } = config;
+    const { name, bounds, cells, scale, align, padding, offset } = config;
 
     this._config = config;
     this._name = name;
@@ -25,6 +26,7 @@ export class Cell<T extends ICellConfig | IGridConfig> {
     this._align = align || CellAlign.Center;
     this._bounds = fillRect(bounds ? (typeof bounds === 'function' ? bounds() : bounds) : {});
     this._padding = convertToRect(padding || 0, this._bounds);
+    this._offset = this._getOffset(offset);
     this._cells = this._buildCells(cells || []);
     this._contents = [];
   }
@@ -98,6 +100,14 @@ export class Cell<T extends ICellConfig | IGridConfig> {
   }
 
   /**
+   * @description Cell offset
+   * @returns {Point} cell offset
+   */
+  get offset(): Point {
+    return this._offset;
+  }
+
+  /**
    * @description Returns cells way down of the tree, recursively
    * @returns {Cell[]} Array of cells
    */
@@ -124,18 +134,22 @@ export class Cell<T extends ICellConfig | IGridConfig> {
    * @returns {IMergedConfig}
    */
   public mergeContentConfig(config: IContentConfig | undefined): IMergedConfig {
-    const { align, contentArea, scale, bounds } = this;
+    const { align, contentArea, scale, bounds, offset } = this;
 
     if (config === undefined) {
-      return { align, area: contentArea, scale, offset: new Point(0, 0) };
+      return { align, area: contentArea, scale, offset };
     }
 
     return {
       align: config.align ? config.align : align,
       area: config.padding ? convertToRect(config.padding, contentArea) : contentArea,
-      offset: config.offset ? new Point(config.offset.x || 0, config.offset.y || 0) : new Point(0, 0),
+      offset: config.offset ? new Point(config.offset.x || offset.x, config.offset.y || offset.y) : offset,
       scale: config.scale ? config.scale : scale,
     };
+  }
+
+  private _getOffset(rawOffset?: { x?: number; y?: number }): Point {
+    return rawOffset ? new Point(rawOffset.x || 0, rawOffset.y || 0) : new Point(0, 0);
   }
 
   private _buildCells(rawCells: ICellConfig[]): Cell<ICellConfig>[] {
