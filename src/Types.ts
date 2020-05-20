@@ -45,6 +45,7 @@ export enum CellScale {
   Fit,
   Fill,
   ShowAll,
+  Envelop,
 }
 
 export enum CellAlign {

@@ -36,6 +36,8 @@ export function fit(d1: IDimension, d2: IDimension, scaleType: CellScale): Point
       return _fill(d1, d2);
     case CellScale.ShowAll:
       return _showAll(d1, d2);
+    case CellScale.Envelop:
+      return _envelop(d1, d2);
     case CellScale.None:
       return new Point(1, 1);
     default:
@@ -93,6 +95,14 @@ function _showAll(d1: IDimension, d2: IDimension): Point {
   const { width: w1, height: h1 } = d1;
   const { width: w2, height: h2 } = d2;
   const s = Math.min(w2 / w1, h2 / h1);
+
+  return new Point(s, s);
+}
+
+function _envelop(d1: IDimension, d2: IDimension): Point {
+  const { width: w1, height: h1 } = d1;
+  const { width: w2, height: h2 } = d2;
+  const s = Math.max(w2 / w1, h2 / h1);
 
   return new Point(s, s);
 }
