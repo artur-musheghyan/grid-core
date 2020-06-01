@@ -1,5 +1,3 @@
-import { Rect } from './utils/geom/Rect';
-
 export interface ICellConfig {
   name: string;
   scale?: CellScale;
@@ -14,26 +12,6 @@ export type IGridConfig = ICellConfig & {
   debug?: { color?: number };
   bounds?: () => { x: number; y: number; width: number; height: number };
 };
-
-export interface IContent {
-  child: any;
-  config?: IContentConfig;
-}
-
-export interface IContentConfig {
-  scale?: CellScale;
-  align?: CellAlign;
-  padding?: number | { x?: number; y?: number; width?: number; height?: number };
-  offset?: { x?: number; y?: number };
-  debug?: { color?: number };
-}
-
-export interface IMergedConfig {
-  scale: CellScale;
-  align: CellAlign;
-  area: Rect;
-  offset: { x: number; y: number };
-}
 
 export interface IDimension {
   width: number;

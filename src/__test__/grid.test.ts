@@ -49,8 +49,8 @@ test('Grid Align', () => {
   expect(grid.align).toEqual(gridAlign);
 });
 
-test('Grid Content Area', () => {
-  expect(grid.contentArea).toEqual(convertToRect(gridPadding, grid.bounds));
+test('Grid  Area', () => {
+  expect(grid.area).toEqual(convertToRect(gridPadding, grid.bounds));
 });
 
 test('Grid Get Cell By Name', () => {

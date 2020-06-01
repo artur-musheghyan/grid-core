@@ -1,18 +1,18 @@
-import { CellAlign, CellScale, ICellConfig, IContent, IContentConfig, IGridConfig, IMergedConfig } from './Types';
+import { CellAlign, CellScale, ICellConfig, IGridConfig } from './Types';
 import { Point } from './utils/geom/Point';
 import { Rect } from './utils/geom/Rect';
 import { convertToRect, fillRect } from './utils/Utils';
 
-export class Cell<T extends ICellConfig | IGridConfig> {
+export class Cell<T extends ICellConfig | IGridConfig, K> {
   private _config: T;
   private readonly _name: string;
-  private readonly _cells: Cell<ICellConfig>[];
+  private readonly _cells: Cell<T, K>[];
   private readonly _bounds: Rect;
   private readonly _scale: CellScale;
   private readonly _align: CellAlign;
   private readonly _padding: Rect;
   private readonly _offset: Point;
-  private readonly _contents: IContent[];
+  private readonly _contents: K[];
 
   /**
    * @param config Input configuration object.
@@ -27,8 +27,8 @@ export class Cell<T extends ICellConfig | IGridConfig> {
     this._bounds = fillRect(bounds ? (typeof bounds === 'function' ? bounds() : bounds) : {});
     this._padding = convertToRect(padding || 0, this._bounds);
     this._offset = this._getOffset(offset);
-    this._cells = this._buildCells(cells || []);
-    this._contents = [];
+    this._cells = this._buildCells(cells || new Array(0));
+    this._contents = new Array(0);
   }
 
   /**
@@ -55,7 +55,7 @@ export class Cell<T extends ICellConfig | IGridConfig> {
    * @description Array of child cells
    * @returns {Cell[]} child cells
    */
-  get cells(): Cell<ICellConfig>[] {
+  get cells(): Cell<T, K>[] {
     return this._cells;
   }
 
@@ -68,7 +68,15 @@ export class Cell<T extends ICellConfig | IGridConfig> {
   }
 
   /**
-   * @description Scale type, used to scale contents in this cell
+   * @description Padding area in pixels
+   * @returns {Rect} padding area
+   */
+  get padding(): Rect {
+    return this._padding;
+  }
+
+  /**
+   * @description Scale type, used to scale contents
    * @returns {CellScale} scale type
    */
   get scale(): CellScale {
@@ -76,7 +84,7 @@ export class Cell<T extends ICellConfig | IGridConfig> {
   }
 
   /**
-   * @description Align type, used to align contents in this cell
+   * @description Align type, used to align contents
    * @returns {CellAlign} align type
    */
   get align(): CellAlign {
@@ -84,19 +92,21 @@ export class Cell<T extends ICellConfig | IGridConfig> {
   }
 
   /**
-   * @description Contents added in this cell
-   * @returns {IContent[]} cell contents
+   * @description Contents
+   * @returns {K[]} cell contents
    */
-  get contents(): IContent[] {
+  get contents(): K[] {
     return this._contents;
   }
 
   /**
-   * @description Cell bounds considered paddings
-   * @returns {Rect} cell bounds considered paddings
+   * @description Cell bounds considered paddings and offsets
+   * @returns {Rect} Rectangle considered paddings and offsets
    */
-  get contentArea(): Rect {
-    return this._padding;
+  get area(): Rect {
+    const { padding: p, offset: o } = this;
+
+    return new Rect(p.x + o.x, p.y + o.y, p.width, p.height);
   }
 
   /**
@@ -111,7 +121,7 @@ export class Cell<T extends ICellConfig | IGridConfig> {
    * @description Returns cells way down of the tree, recursively
    * @returns {Cell[]} Array of cells
    */
-  public getCells(): Cell<ICellConfig>[] {
+  public getCells(): Cell<T, K>[] {
     const cells = [];
     cells.push(this);
     this._cells.forEach(cell => cells.push(...cell.getCells()));
@@ -124,38 +134,18 @@ export class Cell<T extends ICellConfig | IGridConfig> {
    * @param name The name of the cell
    * @returns {Cell | undefined}
    */
-  public getCellByName(name: string): Cell<ICellConfig> | undefined {
+  public getCellByName(name: string): Cell<T, K> | undefined {
     return this.getCells().find(cell => cell._name === name);
-  }
-
-  /**
-   * @description Merges content config into cell config. Content config has higher priority.
-   * @param config Content config
-   * @returns {IMergedConfig}
-   */
-  public mergeContentConfig(config: IContentConfig | undefined): IMergedConfig {
-    const { align, contentArea, scale, bounds, offset } = this;
-
-    if (config === undefined) {
-      return { align, area: contentArea, scale, offset };
-    }
-
-    return {
-      align: config.align ? config.align : align,
-      area: config.padding ? convertToRect(config.padding, contentArea) : contentArea,
-      offset: config.offset ? new Point(config.offset.x || offset.x, config.offset.y || offset.y) : offset,
-      scale: config.scale ? config.scale : scale,
-    };
   }
 
   private _getOffset(rawOffset?: { x?: number; y?: number }): Point {
     return rawOffset ? new Point(rawOffset.x || 0, rawOffset.y || 0) : new Point(0, 0);
   }
 
-  private _buildCells(rawCells: ICellConfig[]): Cell<ICellConfig>[] {
+  private _buildCells(rawCells: T[]): Cell<T, K>[] {
     const cells = [];
 
-    const { width: bw, height: bh, left: bl, right: br, top: bt, bottom: bb } = this.contentArea;
+    const { width: bw, height: bh, left: bl, right: br, top: bt, bottom: bb } = this.area;
     for (const rawCell of rawCells) {
       const { bounds: rb } = rawCell;
       const rawBounds = Object.assign({}, rb);
@@ -166,7 +156,7 @@ export class Cell<T extends ICellConfig | IGridConfig> {
       rb.width = rb.width !== undefined ? rb.width * bw : br - rb.x;
       rb.height = rb.height !== undefined ? rb.height * bh : bb - rb.y;
 
-      const cell = new Cell(rawCell);
+      const cell = new Cell<T, K>(rawCell);
       cell.config.bounds = rawBounds;
       cells.push(cell);
     }
