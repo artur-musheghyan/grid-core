@@ -1,6 +1,6 @@
 export interface ICellConfig {
   name: string;
-  debug?: { color?: number };
+  debug?: { color?: number; fill?: boolean };
   scale?: CellScale;
   align?: CellAlign;
   cells?: ICellConfig[];
