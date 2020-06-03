@@ -1,5 +1,6 @@
 export interface ICellConfig {
   name: string;
+  debug?: { color?: number };
   scale?: CellScale;
   align?: CellAlign;
   cells?: ICellConfig[];
@@ -9,7 +10,6 @@ export interface ICellConfig {
 }
 
 export type IGridConfig = ICellConfig & {
-  debug?: { color?: number };
   bounds?: () => { x: number; y: number; width: number; height: number };
 };
 
