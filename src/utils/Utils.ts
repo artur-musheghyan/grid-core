@@ -1,24 +1,17 @@
-import { CellAlign, CellScale, IDimension } from '../Types';
+import { CellAlign, CellScale, IDimension, IRawRect } from '../Types';
 import { Point } from './geom/Point';
 import { Rect } from './geom/Rect';
 
-export function convertToRect(
-  value: number | { x?: number; y?: number; width?: number; height?: number },
-  bounds: Rect,
-): Rect {
-  const valueAsRect = typeof value === 'number' ? numberToRect(value) : fillRect(value);
-  const { x: rx, y: ry, width: rw, height: rh } = valueAsRect;
-  const { x: bx, y: by, width: bw, height: bh } = bounds;
-
-  return new Rect(bx + rx * bw, by + ry * bh, bw * rw, bh * rh);
+export function convertToRect({ x = 0, y = 0, width = 0, height = 0 }: IRawRect): Rect {
+  return new Rect(x, y, width, height);
 }
 
 export function numberToRect(value: number): Rect {
   return new Rect(value, value, 1 - 2 * value, 1 - 2 * value);
 }
 
-export function fillRect({ x, y, width, height }: { x?: number; y?: number; width?: number; height?: number }): Rect {
-  return new Rect(x || 0, y || 0, width || 1 - (x ? x : 0), height || 1 - (y ? y : 0));
+export function fillRect({ x = 0, y = 0, width = 1 - (x ? x : 0), height = 1 - (y ? y : 0) }: IRawRect): Rect {
+  return new Rect(x, y, width, height);
 }
 
 /**

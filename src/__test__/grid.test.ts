@@ -1,6 +1,6 @@
 import { Cell } from '..';
 import { CellAlign, CellScale } from '../Types';
-import { convertToRect, fillRect } from '../utils/Utils';
+import { fillRect } from '../utils/Utils';
 
 const gridName = 'TestGrid';
 
@@ -16,7 +16,7 @@ const gridPadding = 10;
 
 const gridConfig = {
   align: gridAlign,
-  bounds: gridBounds,
+  bounds: gridBounds(),
   cells: gridCells,
   name: gridName,
   padding: gridPadding,
@@ -47,10 +47,6 @@ test('Grid Scale', () => {
 
 test('Grid Align', () => {
   expect(grid.align).toEqual(gridAlign);
-});
-
-test('Grid  Area', () => {
-  expect(grid.area).toEqual(convertToRect(gridPadding, grid.bounds));
 });
 
 test('Grid Get Cell By Name', () => {

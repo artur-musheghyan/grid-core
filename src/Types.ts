@@ -1,22 +1,28 @@
-export interface ICellConfig {
+export type IRawOffset = { x?: number; y?: number };
+
+export type IRawRect = { x?: number; y?: number; width?: number; height?: number };
+
+export type IRawPadding = number | IRawRect;
+
+export type IRawBounds = IRawRect;
+
+export type IDebug = { color?: number; fill?: boolean };
+
+export type ICellConfig = {
   name: string;
-  debug?: { color?: number; fill?: boolean };
+  debug?: IDebug;
   scale?: CellScale;
   align?: CellAlign;
   cells?: ICellConfig[];
-  bounds: { x?: number; y?: number; width?: number; height?: number };
-  padding?: number | { x?: number; y?: number; width: number; height: number };
-  offset?: { x?: number; y?: number };
-}
-
-export type IGridConfig = ICellConfig & {
-  bounds?: () => { x: number; y: number; width: number; height: number };
+  bounds?: IRawBounds;
+  padding?: IRawPadding;
+  offset?: IRawOffset;
 };
 
-export interface IDimension {
+export type IDimension = {
   width: number;
   height: number;
-}
+};
 
 export enum CellScale {
   None = 1,

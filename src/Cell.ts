@@ -1,45 +1,88 @@
-import { CellAlign, CellScale, ICellConfig, IGridConfig } from './Types';
+import { CellAlign, CellScale, ICellConfig, IRawOffset, IRawPadding, IRawRect } from './Types';
 import { Point } from './utils/geom/Point';
 import { Rect } from './utils/geom/Rect';
-import { convertToRect, fillRect } from './utils/Utils';
+import { convertToRect, fillRect, numberToRect } from './utils/Utils';
 
-export class Cell<T extends ICellConfig | IGridConfig, K> {
-  private _config: T;
+export class Cell<T> {
+  private _config: ICellConfig;
   private readonly _name: string;
-  private readonly _cells: Cell<T, K>[];
+  private readonly _cells: Cell<T>[];
   private readonly _bounds: Rect;
   private readonly _scale: CellScale;
   private readonly _align: CellAlign;
   private readonly _padding: Rect;
   private readonly _offset: Point;
-  private readonly _contents: K[];
+  private readonly _contents: T[];
 
   /**
    * @param config Input configuration object.
    */
-  constructor(config: T) {
+  constructor(config: ICellConfig) {
     const { name, bounds, cells, scale, align, padding, offset } = config;
 
     this._config = config;
-    this._name = name;
-    this._scale = scale || CellScale.Fit;
-    this._align = align || CellAlign.Center;
-    this._bounds = fillRect(bounds ? (typeof bounds === 'function' ? bounds() : bounds) : {});
-    this._padding = convertToRect(padding || 0, this._bounds);
+    this._name = this._getName(name);
+    this._scale = this._getScale(scale);
+    this._align = this._getAlign(align);
     this._offset = this._getOffset(offset);
-    this._cells = this._buildCells(cells || new Array(0));
-    this._contents = new Array(0);
+    this._contents = this._getContents();
+    this._bounds = this._getBounds(bounds);
+    this._padding = this._buildPadding(this._getPadding(padding));
+    this._cells = this._buildCells(this._getCells(cells));
+  }
+
+  _getName(rawName: string): string {
+    return rawName;
+  }
+
+  _getScale(rawScale: CellScale | undefined): CellScale {
+    return rawScale || CellScale.Fit;
+  }
+
+  _getAlign(rawAlign: CellAlign | undefined): CellAlign {
+    return rawAlign || CellAlign.Center;
+  }
+
+  _getOffset(rawOffset: IRawOffset | undefined): Point {
+    return rawOffset ? new Point(rawOffset.x || 0, rawOffset.y || 0) : new Point(0, 0);
+  }
+
+  _getContents(): T[] {
+    return new Array(0);
+  }
+
+  _getCells(rawCells: ICellConfig[] | undefined): ICellConfig[] {
+    return rawCells || new Array(0);
+  }
+
+  _getBounds(rawBounds: IRawRect | undefined): Rect {
+    return rawBounds ? convertToRect(rawBounds) : new Rect(0, 0, 0, 0);
+  }
+
+  _getPadding(rawPadding: IRawPadding | undefined): Rect {
+    return rawPadding
+      ? typeof rawPadding === 'number'
+        ? numberToRect(rawPadding)
+        : fillRect(rawPadding)
+      : new Rect(0, 0, 1, 1);
+  }
+
+  _buildPadding(padding: Rect) {
+    const { x: px, y: py, width: pw, height: ph } = padding;
+    const { x: bx, y: by, width: bw, height: bh } = this._bounds;
+
+    return new Rect(bx + px * bw, by + py * bh, bw * pw, bh * ph);
   }
 
   /**
    * @description Configuration object reference passed in constructor
-   * @returns {T} configuration object
+   * @returns {ICellConfig} configuration object
    */
-  get config(): T {
+  get config(): ICellConfig {
     return this._config;
   }
 
-  set config(value: T) {
+  set config(value: ICellConfig) {
     this._config = value;
   }
 
@@ -55,7 +98,7 @@ export class Cell<T extends ICellConfig | IGridConfig, K> {
    * @description Array of child cells
    * @returns {Cell[]} child cells
    */
-  get cells(): Cell<T, K>[] {
+  get cells(): Cell<T>[] {
     return this._cells;
   }
 
@@ -93,9 +136,9 @@ export class Cell<T extends ICellConfig | IGridConfig, K> {
 
   /**
    * @description Contents
-   * @returns {K[]} cell contents
+   * @returns {T[]} cell contents
    */
-  get contents(): K[] {
+  get contents(): T[] {
     return this._contents;
   }
 
@@ -121,7 +164,7 @@ export class Cell<T extends ICellConfig | IGridConfig, K> {
    * @description Returns cells way down of the tree, recursively
    * @returns {Cell[]} Array of cells
    */
-  public getCells(): Cell<T, K>[] {
+  public getCells(): Cell<T>[] {
     const cells = [];
     cells.push(this);
     this._cells.forEach(cell => cells.push(...cell.getCells()));
@@ -134,30 +177,27 @@ export class Cell<T extends ICellConfig | IGridConfig, K> {
    * @param name The name of the cell
    * @returns {Cell | undefined}
    */
-  public getCellByName(name: string): Cell<T, K> | undefined {
+  public getCellByName(name: string): Cell<T> | undefined {
     return this.getCells().find(cell => cell._name === name);
   }
 
-  private _getOffset(rawOffset?: { x?: number; y?: number }): Point {
-    return rawOffset ? new Point(rawOffset.x || 0, rawOffset.y || 0) : new Point(0, 0);
-  }
-
-  private _buildCells(rawCells: T[]): Cell<T, K>[] {
+  private _buildCells(rawCells: ICellConfig[]): Cell<T>[] {
     const cells = [];
 
     const { width: bw, height: bh, left: bl, right: br, top: bt, bottom: bb } = this.area;
+
     for (const rawCell of rawCells) {
-      const { bounds: rb } = rawCell;
-      const rawBounds = Object.assign({}, rb);
+      const { bounds = new Rect(0, 0, 0, 0) } = rawCell;
+      const configBounds = { ...bounds };
 
-      rb.x = rb.x !== undefined ? bl + rb.x * bw : Math.max(bl, ...cells.map(({ _bounds: b }) => b.right));
-      rb.y = rb.y !== undefined ? bt + rb.y * bh : Math.max(bt, ...cells.map(({ _bounds: b }) => b.bottom));
+      bounds.x = bounds.x !== undefined ? bl + bounds.x * bw : Math.max(bl, ...cells.map(({ _bounds: b }) => b.right));
+      bounds.y = bounds.y !== undefined ? bt + bounds.y * bh : Math.max(bt, ...cells.map(({ _bounds: b }) => b.bottom));
 
-      rb.width = rb.width !== undefined ? rb.width * bw : br - rb.x;
-      rb.height = rb.height !== undefined ? rb.height * bh : bb - rb.y;
+      bounds.width = bounds.width !== undefined ? bounds.width * bw : br - bounds.x;
+      bounds.height = bounds.height !== undefined ? bounds.height * bh : bb - bounds.y;
 
-      const cell = new Cell<T, K>(rawCell);
-      cell.config.bounds = rawBounds;
+      const cell = new Cell<T>(rawCell);
+      cell.config.bounds = configBounds;
       cells.push(cell);
     }
 
