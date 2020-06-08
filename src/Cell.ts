@@ -4,6 +4,8 @@ import { Rect } from './utils/geom/Rect';
 import { convertToRect, fillRect, numberToRect } from './utils/Utils';
 
 export class Cell<T> {
+  public static readonly MIN_SIZE: number = 0.0000001;
+
   private _config: ICellConfig;
   private readonly _name: string;
   private readonly _cells: Cell<T>[];
@@ -56,7 +58,7 @@ export class Cell<T> {
   }
 
   _getBounds(rawBounds: IRawRect | undefined): Rect {
-    return rawBounds ? convertToRect(rawBounds) : new Rect(0, 0, 0, 0);
+    return rawBounds ? convertToRect(rawBounds) : new Rect(0, 0, Cell.MIN_SIZE, Cell.MIN_SIZE);
   }
 
   _getPadding(rawPadding: IRawPadding | undefined): Rect {
