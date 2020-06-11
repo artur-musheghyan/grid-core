@@ -30,6 +30,7 @@ export enum CellScale {
   Fill,
   ShowAll,
   Envelop,
+  Custom,
 }
 
 export enum CellAlign {
